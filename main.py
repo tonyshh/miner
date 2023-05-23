@@ -14,6 +14,7 @@ BOMB_COUNT = 10
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (150, 150, 150)
+RED = (255, 0, 0)
 
 # Инициализация Pygame
 pygame.init()
@@ -57,8 +58,23 @@ def reveal_cells(grid, revealed_grid, x, y):
     if grid[x][y] == 0:
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if 0 <= x + i < GRID_WIDTH and 0 <= y + j < GRID_HEIGHT:
+                if 0 <= x + i < GRID_WIDTH and 0 <= y + j < GRID_HEIGHT and not revealed_grid[x + i][y + j]:
                     reveal_cells(grid, revealed_grid, x + i, y + j)
+
+
+def toggle_marker(grid, x, y):
+    if grid[x][y] == "marker":
+        grid[x][y] = 0
+    elif grid[x][y] == 0:
+        grid[x][y] = "marker"
+
+
+def check_win(revealed_grid, grid):
+    for x in range(GRID_WIDTH):
+        for y in range(GRID_HEIGHT):
+            if not revealed_grid[x][y] and grid[x][y] != "bomb":
+                return False
+    return True
 
 
 def main():
@@ -84,7 +100,13 @@ def main():
                     pos = pygame.mouse.get_pos()
                     cell_x = pos[0] // CELL_SIZE
                     cell_y = pos[1] // CELL_SIZE
-                    reveal_cells(grid, revealed_grid, cell_x, cell_y)
+                    if not revealed_grid[cell_x][cell_y]:
+                        reveal_cells(grid, revealed_grid, cell_x, cell_y)
+                elif event.button == 3:
+                    pos = pygame.mouse.get_pos()
+                    cell_x = pos[0] // CELL_SIZE
+                    cell_y = pos[1] // CELL_SIZE
+                    toggle_marker(grid, cell_x, cell_y)
 
         screen.fill(BLACK)
         draw_grid()
@@ -102,6 +124,15 @@ def main():
                             text_rect = text.get_rect(center=(x * CELL_SIZE + CELL_SIZE // 2,
                                                                y * CELL_SIZE + CELL_SIZE // 2))
                             screen.blit(text, text_rect)
+                elif grid[x][y] == "marker":
+                    pygame.draw.rect(screen, RED, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+
+        if check_win(revealed_grid, grid):
+            font = pygame.font.Font(None, 36)
+            text = font.render("You Win!", True, WHITE)
+            text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            screen.blit(text, text_rect)
+            running = False
 
         pygame.display.flip()
 
