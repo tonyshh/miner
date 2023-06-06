@@ -44,13 +44,13 @@ def count_neighbor_bombs(grid, x, y):
     for i in range(-1, 2):
         for j in range(-1, 2):
             if 0 <= x + i < GRID_WIDTH and 0 <= y + j < GRID_HEIGHT:
-                if grid[x + i][y + j] == "bomb":
+                if grid[x + i][y + j] == -1:
                     count += 1
     return count
 
 
 def reveal_cells(grid, revealed_grid, x, y):
-    if grid[x][y] == "bomb":
+    if grid[x][y] == -1:
         return
     if revealed_grid[x][y]:
         return
@@ -62,17 +62,17 @@ def reveal_cells(grid, revealed_grid, x, y):
                     reveal_cells(grid, revealed_grid, x + i, y + j)
 
 
-def toggle_marker(grid, x, y):
-    if grid[x][y] == "marker":
+def toggle_marker(grid, x, y, revealed_grid):
+    if grid[x][y] < 0:
         grid[x][y] = 0
-    elif grid[x][y] == 0:
+    elif grid[x][y] == 0 and not revealed_grid[x][y]:
         grid[x][y] = "marker"
 
 
 def check_win(revealed_grid, grid):
     for x in range(GRID_WIDTH):
         for y in range(GRID_HEIGHT):
-            if not revealed_grid[x][y] and grid[x][y] != "bomb":
+            if not revealed_grid[x][y] and grid[x][y] != -1:
                 return False
     return True
 
@@ -82,11 +82,7 @@ def main():
     revealed_grid = [[False] * GRID_HEIGHT for _ in range(GRID_WIDTH)]
     bombs = generate_bombs()
     for bomb in bombs:
-        grid[bomb[0]][bomb[1]] = "bomb"
-    for x in range(GRID_WIDTH):
-        for y in range(GRID_HEIGHT):
-            if grid[x][y] != "bomb":
-                grid[x][y] = count_neighbor_bombs(grid, x, y)
+        grid[bomb[0]][bomb[1]] = -1
 
     running = True
     while running:
@@ -106,7 +102,7 @@ def main():
                     pos = pygame.mouse.get_pos()
                     cell_x = pos[0] // CELL_SIZE
                     cell_y = pos[1] // CELL_SIZE
-                    toggle_marker(grid, cell_x, cell_y)
+                    toggle_marker(grid, cell_x, cell_y, revealed_grid)
 
         screen.fill(BLACK)
         draw_grid()
@@ -114,7 +110,7 @@ def main():
         for x in range(GRID_WIDTH):
             for y in range(GRID_HEIGHT):
                 if revealed_grid[x][y]:
-                    if grid[x][y] == "bomb":
+                    if grid[x][y] == -1:
                         pygame.draw.rect(screen, WHITE, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
                     else:
                         pygame.draw.rect(screen, WHITE, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
